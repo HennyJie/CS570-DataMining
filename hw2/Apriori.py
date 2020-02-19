@@ -1,7 +1,7 @@
 '''
 @Author: Hejie Cui
 @Date: 2020-02-17 18:54:57
-@LastEditTime: 2020-02-19 11:48:47
+@LastEditTime: 2020-02-19 13:00:35
 @FilePath: /CS570-DataMining/hw2/Apriori.py
 '''
 import time
@@ -19,6 +19,7 @@ def parse_dataset(input_dataset_name):
     return dataset
 
 
+# function for rerank the frequent itemset to have the same order as example-output.txt
 def get_values(itemset):
     list_of_item_value = [int(x) for x in itemset]
     return list_of_item_value

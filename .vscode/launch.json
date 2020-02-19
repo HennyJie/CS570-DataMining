@@ -13,7 +13,7 @@
             "args": [
                 "hw2/T10I4D100K.txt",
                 "500",
-                "hw2/output.txt"
+                "hw2/result500.txt"
             ]
         }
     ]
