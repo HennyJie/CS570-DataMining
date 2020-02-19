@@ -1,12 +1,13 @@
 '''
 @Author: Hejie Cui
 @Date: 2020-02-17 18:54:57
-@LastEditTime: 2020-02-19 10:32:28
+@LastEditTime: 2020-02-19 11:48:47
 @FilePath: /CS570-DataMining/hw2/Apriori.py
 '''
 import time
 import sys
 import itertools
+from functools import cmp_to_key
 
 
 def parse_dataset(input_dataset_name):
@@ -18,8 +19,42 @@ def parse_dataset(input_dataset_name):
     return dataset
 
 
+def get_values(itemset):
+    list_of_item_value = [int(x) for x in itemset]
+    return list_of_item_value
+
+
+def compare(a, b):
+    a = get_values(a)
+    a_len = len(a)
+    b = get_values(b)
+    b_len = len(b)
+
+    if a_len == b_len:
+        for i in range(a_len):
+            if not a[i] == b[i]:
+                return a[i] - b[i]
+    else:
+        for i in range(max(a_len, b_len)):
+            if i >= a_len:
+                return -1
+            elif i >= b_len:
+                return 1
+
+            if not a[i] == b[i]:
+                return a[i] - b[i]
+
+
 def write_to_output_file(output_file_name, frequent_itemset_dict):
     output = {}
+    sorted_output_keys = sorted(
+        frequent_itemset_dict.keys(), key=cmp_to_key(compare))
+    sorted_output_keys_string = []
+
+    for sorted_item_key in sorted_output_keys:
+        sorted_item_key = [str(i) for i in sorted_item_key]
+        sorted_item_key = ' '.join(sorted_item_key)
+        sorted_output_keys_string.append(sorted_item_key)
 
     for frequent_itemset, support in frequent_itemset_dict.items():
         frequent_itemset = [str(i) for i in frequent_itemset]
@@ -27,8 +62,7 @@ def write_to_output_file(output_file_name, frequent_itemset_dict):
         output[frequent_itemset_string] = support
 
     with open(output_file_name, 'w') as output_file:
-        items = sorted(output.keys())
-        for item in items:
+        for item in sorted_output_keys_string:
             output_file.write(f'{item} ({output[item]})\n')
 
 
