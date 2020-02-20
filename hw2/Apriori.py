@@ -1,7 +1,7 @@
 '''
 @Author: Hejie Cui
 @Date: 2020-02-17 18:54:57
-@LastEditTime: 2020-02-19 16:32:24
+@LastEditTime: 2020-02-20 14:35:29
 @FilePath: /CS570-DataMining/hw2/Apriori.py
 '''
 import time
@@ -32,7 +32,7 @@ def compare(a, b):
     a_len = len(a)
     b = get_values(b)
     b_len = len(b)
-
+    # divide the situation: whether the two itemsets have the same length
     if a_len == b_len:
         for i in range(a_len):
             if not a[i] == b[i]:
@@ -65,9 +65,10 @@ def write_to_output_file(output_file_name, frequent_itemset_dict):
         frequent_itemset_string = ' '.join(frequent_itemset)
         output[frequent_itemset_string] = support
 
+    # print("num of frequent itemsets: ", len(frequent_itemset_dict))
     with open(output_file_name, 'w') as output_file:
         for item in sorted_output_keys_string:
-            output_file.write(f'{item} ({output[item]})\n')
+            output_file.write('{} ({})\n'.format(item, output[item]))
 
 
 # generate C_1 and L_1
@@ -81,6 +82,7 @@ def generate_L_1(dataset, minimum_support_count_threshold, frequent_items_count)
                 C_1[dataset[i][j]] += 1
     # print("len C_1: ", len(C_1))
 
+    # generate L_1
     L_1 = []
     for item in C_1:
         if C_1[item] >= minimum_support_count_threshold:
@@ -90,7 +92,7 @@ def generate_L_1(dataset, minimum_support_count_threshold, frequent_items_count)
     return L_1
 
 
-# generate C_2 and L_2
+# generate C_2 and L_2, here I only used hash for the generation of L_2, which is the bottleneck of the whole algorithm
 def generate_L_2_with_hashtable(dataset, minimum_support_count_threshold, frequent_items_count):
     hash_table = {}
     for transaction in dataset:
@@ -101,6 +103,7 @@ def generate_L_2_with_hashtable(dataset, minimum_support_count_threshold, freque
                 hash_table[itemset] += 1
     # print("len C_2: ", len(hash_table))
 
+    # generate L_2
     L_2 = []
     for itemset in hash_table:
         if hash_table[itemset] >= minimum_support_count_threshold:
@@ -149,6 +152,7 @@ def generate_L_k_from_C_k(dataset, C_k, minimum_support_count_threshold, frequen
     itemset_count = {}
     C_k = [set(itemset) for itemset in C_k]
 
+    # count the frequence
     for transaction in dataset:
         for itemset in C_k:
             if itemset.issubset(transaction):
@@ -158,6 +162,7 @@ def generate_L_k_from_C_k(dataset, C_k, minimum_support_count_threshold, frequen
                 else:
                     itemset_count[itemset] += 1
 
+    # determine whether meet the minimum support threthold
     for itemset in itemset_count:
         if itemset_count[itemset] >= minimum_support_count_threshold:
             L_k.append(itemset)
@@ -201,7 +206,7 @@ def run_apriori(argv):
     write_to_output_file(output_file_name, frequent_items_count)
 
     end = time.time()
-    print('running time: {}s'.format(end-start))
+    print('running time: {} s'.format(end-start))
 
 
 if __name__ == "__main__":
