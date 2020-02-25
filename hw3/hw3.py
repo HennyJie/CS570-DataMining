@@ -1,7 +1,7 @@
 '''
 @Author: your name
 @Date: 2020-02-24 14:40:35
-@LastEditTime: 2020-02-24 23:02:28
+@LastEditTime: 2020-02-25 00:15:32
 @LastEditors: Please set LastEditors
 @Description: In User Settings Edit
 @FilePath: /CS570-DataMining/hw3/hw3.py
@@ -13,6 +13,7 @@ import time
 from collections import defaultdict
 
 
+# parse the input data file
 def parse_dataset(input_dasaset):
     dataset = []
     with open(input_dasaset, "r") as f:
@@ -30,7 +31,11 @@ def parse_dataset(input_dasaset):
     return dataset
 
 
+# write to the output file in the required format
 def write_to_output_file(assignments, sum_squared_error, silhouette_coefficient, output_file):
+    print('sum squared error: {}, silhouette_coefficient: {} \n'.format(
+        sum_squared_error, silhouette_coefficient))
+
     with open(output_file, "w") as f:
         for i in range(len(assignments)):
             f.write('{} \n'.format(assignments[i]))
@@ -38,6 +43,32 @@ def write_to_output_file(assignments, sum_squared_error, silhouette_coefficient,
             sum_squared_error, silhouette_coefficient))
 
 
+# max min normalization
+def max_min_normalization(X):
+    X_arr = np.array(X)
+    x_min = np.min(X_arr, axis=0)
+    x_max = np.max(X_arr, axis=0)
+    m = X_arr.shape[1]
+    for i in range(m):
+        X_arr[:, i] = (X_arr[:, i] - x_min[i]) / (x_max[i] - x_min[i])
+    X = X_arr.tolist()
+    return X
+
+
+# z score normalization
+def z_score(X):
+    X_arr = np.array(X)
+
+    x_mu = np.average(X_arr, axis=0)
+    x_sigma = np.std(X_arr, axis=0)
+    m = X_arr.shape[1]
+    for i in range(m):
+        X_arr[:, i] = (X_arr[:, i] - x_mu[i]) / x_sigma[i]
+    X = X_arr.tolist()
+    return X
+
+
+# calculate the final silhouette coefficient
 def cal_silhouette_coefficient(dataset, assignments):
     final_clusters = defaultdict(list)
     for point, assignment in zip(dataset, assignments):
@@ -49,16 +80,16 @@ def cal_silhouette_coefficient(dataset, assignments):
         intra_dist_sum = 0
         inter_dist_sum = 0
         for o in final_clusters[center]:
-            intra_dist_sum = np.sum(cal_distance(o, o_prime)
-                                    for o_prime in final_clusters[center])
+            intra_dist_sum = sum(cal_distance(o, o_prime)
+                                 for o_prime in final_clusters[center])
             a_o = intra_dist_sum / float(len(final_clusters[center])-1)
             a_o_list.append(a_o)
 
             inter_dist_list = []
             for another_center in centers:
                 if another_center != center:
-                    inter_dist_sum = np.sum(cal_distance(o, o_prime)
-                                            for o_prime in final_clusters[another_center])
+                    inter_dist_sum = sum(cal_distance(o, o_prime)
+                                         for o_prime in final_clusters[another_center])
                     num_points_in_another_center_cluster = len(
                         final_clusters[another_center])
                     inter_dist_avg = inter_dist_sum / num_points_in_another_center_cluster
@@ -75,6 +106,7 @@ def cal_silhouette_coefficient(dataset, assignments):
     return silhouette_coefficient
 
 
+# calculate the distance between two points
 def cal_distance(a, b):
     dist_sum = 0
     for i, j in zip(a, b):
@@ -82,6 +114,7 @@ def cal_distance(a, b):
     return dist_sum
 
 
+# assign each point in the dataset to its nearest cluster
 def assign_points_to_cluster(dataset, k_centers):
     assignments = []
     sum_squared_error = 0
@@ -98,6 +131,7 @@ def assign_points_to_cluster(dataset, k_centers):
     return assignments, sum_squared_error
 
 
+# calcualte the center of a clusters, given the points in this cluster
 def points_average_centers(points):
     new_center = []
 
@@ -112,6 +146,7 @@ def points_average_centers(points):
     return new_center
 
 
+# update the center using the new assignments
 def update_centers(dataset, assignments):
     new_centers = []
     clusters = defaultdict(list)
@@ -126,6 +161,7 @@ def update_centers(dataset, assignments):
     return new_centers
 
 
+# the main function for running kmeans
 def run_kmeans(argv):
     input_dasaset = argv[0]
     k = int(argv[1])
@@ -133,6 +169,10 @@ def run_kmeans(argv):
 
     start = time.time()
     dataset = parse_dataset(input_dasaset)
+
+    # using different normalization methods
+    # dataset = max_min_normalization(dataset)
+    dataset = z_score(dataset)
 
     initial_k_centers = random.sample(dataset, k)
     print("initial_k_centers: ", initial_k_centers)
