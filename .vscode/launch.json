@@ -11,9 +11,9 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "args": [
-                "hw2/T10I4D100K.txt",
-                "500",
-                "hw2/result500.txt"
+                "hw3/iris.data",
+                "5",
+                "hw3/output.txt"
             ]
         }
     ]
