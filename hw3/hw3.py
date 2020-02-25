@@ -1,7 +1,7 @@
 '''
 @Author: your name
 @Date: 2020-02-24 14:40:35
-@LastEditTime: 2020-02-24 19:32:43
+@LastEditTime: 2020-02-24 23:02:28
 @LastEditors: Please set LastEditors
 @Description: In User Settings Edit
 @FilePath: /CS570-DataMining/hw3/hw3.py
@@ -30,21 +30,61 @@ def parse_dataset(input_dasaset):
     return dataset
 
 
-def write_to_output_file(class_labels, output_file):
-    for i in range(len(class_labels)):
-        with open(output_file, "w") as f:
-            f.write('{} \n'.format(class_labels[i]))
+def write_to_output_file(assignments, sum_squared_error, silhouette_coefficient, output_file):
+    with open(output_file, "w") as f:
+        for i in range(len(assignments)):
+            f.write('{} \n'.format(assignments[i]))
+        f.write('sum squared error: {}, silhouette_coefficient: {} \n'.format(
+            sum_squared_error, silhouette_coefficient))
 
 
-# def cal_SSE():
+def cal_silhouette_coefficient(dataset, assignments):
+    final_clusters = defaultdict(list)
+    for point, assignment in zip(dataset, assignments):
+        final_clusters[assignment].append(point)
+    a_o_list = []
+    b_o_list = []
+    centers = final_clusters.keys()
+    for center in centers:
+        intra_dist_sum = 0
+        inter_dist_sum = 0
+        for o in final_clusters[center]:
+            intra_dist_sum = np.sum(cal_distance(o, o_prime)
+                                    for o_prime in final_clusters[center])
+            a_o = intra_dist_sum / float(len(final_clusters[center])-1)
+            a_o_list.append(a_o)
+
+            inter_dist_list = []
+            for another_center in centers:
+                if another_center != center:
+                    inter_dist_sum = np.sum(cal_distance(o, o_prime)
+                                            for o_prime in final_clusters[another_center])
+                    num_points_in_another_center_cluster = len(
+                        final_clusters[another_center])
+                    inter_dist_avg = inter_dist_sum / num_points_in_another_center_cluster
+                    inter_dist_list.append(inter_dist_avg)
+                    b_o = min(inter_dist_list)
+                    b_o_list.append(b_o)
+
+    s_o_list = []
+    for a_o, b_o in zip(a_o_list, b_o_list):
+        s_o = (b_o - a_o) / max(a_o, b_o)
+        s_o_list.append(s_o)
+
+    silhouette_coefficient = sum(s_o_list) / len(s_o_list)
+    return silhouette_coefficient
+
 
 def cal_distance(a, b):
-    distance = np.sum((i - j)**2 for i, j in zip(a, b))
-    return np.sqrt(distance)
+    dist_sum = 0
+    for i, j in zip(a, b):
+        dist_sum += (i - j)**2
+    return dist_sum
 
 
 def assign_points_to_cluster(dataset, k_centers):
     assignments = []
+    sum_squared_error = 0
     for point in dataset:
         shortest_distance = float("inf")
         shortest_center = 0
@@ -52,8 +92,10 @@ def assign_points_to_cluster(dataset, k_centers):
             dist = cal_distance(point, k_centers[i])
             if dist < shortest_distance:
                 shortest_center = i
+                shortest_distance = dist
         assignments.append(shortest_center)
-    return assignments
+        sum_squared_error += shortest_distance
+    return assignments, sum_squared_error
 
 
 def points_average_centers(points):
@@ -73,11 +115,11 @@ def points_average_centers(points):
 def update_centers(dataset, assignments):
     new_centers = []
     clusters = defaultdict(list)
-    print("dataset: ", dataset)
+    # print("dataset: ", dataset)
 
     for point, assignment in zip(dataset, assignments):
         clusters[assignment].append(point)
-    print("clusters: ", clusters)
+    # print("clusters: ", clusters)
 
     for center in clusters:
         new_centers.append(points_average_centers(clusters[center]))
@@ -95,21 +137,29 @@ def run_kmeans(argv):
     initial_k_centers = random.sample(dataset, k)
     print("initial_k_centers: ", initial_k_centers)
 
-    assignments = assign_points_to_cluster(dataset, initial_k_centers)
+    assignments, sum_squared_error = assign_points_to_cluster(
+        dataset, initial_k_centers)
+    # print("assignments: ", assignments)
+
     old_assignments = None
 
     k_centers = initial_k_centers
+    sum_squared_error = 0
+    silhouette_coefficient = 0
 
     while assignments != old_assignments:
         new_centers = update_centers(dataset, assignments)
         old_assignments = assignments
-        assignments = assign_points_to_cluster(dataset, k_centers)
+        assignments, sum_squared_error = assign_points_to_cluster(
+            dataset, k_centers)
         print("assignments: ", assignments)
 
     end = time.time()
-    write_to_output_file(assignments, output_file)
+    silhouette_coefficient = cal_silhouette_coefficient(dataset, assignments)
+    write_to_output_file(assignments, sum_squared_error,
+                         silhouette_coefficient, output_file)
 
-    # print("running time: ", end - start)
+    print("running time: ", end - start)
 
 
 if __name__ == "__main__":
