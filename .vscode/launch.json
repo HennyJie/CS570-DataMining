@@ -11,9 +11,9 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "args": [
-                "hw3/iris.data",
-                "5",
-                "hw3/output.txt"
+                "hw3/breast-cancer.data",
+                "2",
+                "hw3/breast-cancer_output.txt"
             ]
         }
     ]

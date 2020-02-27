@@ -1,16 +1,26 @@
 '''
-@Author: your name
+@Author: Hejie Cui
 @Date: 2020-02-24 14:40:35
-@LastEditTime: 2020-02-25 00:15:32
-@LastEditors: Please set LastEditors
-@Description: In User Settings Edit
+@LastEditTime: 2020-02-26 22:46:15
 @FilePath: /CS570-DataMining/hw3/hw3.py
 '''
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
 import sys
 import random
 import numpy as np
 import time
 from collections import defaultdict
+import math
+
+
+# funnction for filtering out only numerical type attributes
+def is_numerical(all_attributes):
+    try:
+        float(all_attributes)
+        return True
+    except ValueError:
+        return False
 
 
 # parse the input data file
@@ -20,11 +30,9 @@ def parse_dataset(input_dasaset):
         for line in f.readlines():
             line = line.strip("\n")
             numerical_attributes = []
-            all_attributes = [i for i in line.split(",")]
-
-            for i in range(len(all_attributes)-1):
-                numerical_attributes.append(float(all_attributes[i]))
-
+            all_attributes = line.split(",")
+            numerical_attributes = filter(is_numerical, all_attributes)
+            numerical_attributes = [float(f) for f in numerical_attributes]
             if numerical_attributes != []:
                 dataset.append(numerical_attributes)
 
@@ -58,7 +66,6 @@ def max_min_normalization(X):
 # z score normalization
 def z_score(X):
     X_arr = np.array(X)
-
     x_mu = np.average(X_arr, axis=0)
     x_sigma = np.std(X_arr, axis=0)
     m = X_arr.shape[1]
@@ -73,8 +80,8 @@ def cal_silhouette_coefficient(dataset, assignments):
     final_clusters = defaultdict(list)
     for point, assignment in zip(dataset, assignments):
         final_clusters[assignment].append(point)
-    a_o_list = []
-    b_o_list = []
+
+    s_o_list = []
     centers = final_clusters.keys()
     for center in centers:
         intra_dist_sum = 0
@@ -83,26 +90,24 @@ def cal_silhouette_coefficient(dataset, assignments):
             intra_dist_sum = sum(cal_distance(o, o_prime)
                                  for o_prime in final_clusters[center])
             a_o = intra_dist_sum / float(len(final_clusters[center])-1)
-            a_o_list.append(a_o)
 
             inter_dist_list = []
             for another_center in centers:
                 if another_center != center:
                     inter_dist_sum = sum(cal_distance(o, o_prime)
                                          for o_prime in final_clusters[another_center])
-                    num_points_in_another_center_cluster = len(
-                        final_clusters[another_center])
+                    num_points_in_another_center_cluster = float(len(
+                        final_clusters[another_center]))
                     inter_dist_avg = inter_dist_sum / num_points_in_another_center_cluster
                     inter_dist_list.append(inter_dist_avg)
-                    b_o = min(inter_dist_list)
-                    b_o_list.append(b_o)
 
-    s_o_list = []
-    for a_o, b_o in zip(a_o_list, b_o_list):
-        s_o = (b_o - a_o) / max(a_o, b_o)
-        s_o_list.append(s_o)
+            b_o = min(inter_dist_list)
+
+            s_o = (b_o - a_o) / max(a_o, b_o)
+            s_o_list.append(s_o)
 
     silhouette_coefficient = sum(s_o_list) / len(s_o_list)
+
     return silhouette_coefficient
 
 
@@ -111,13 +116,14 @@ def cal_distance(a, b):
     dist_sum = 0
     for i, j in zip(a, b):
         dist_sum += (i - j)**2
-    return dist_sum
+    return math.sqrt(dist_sum)
 
 
 # assign each point in the dataset to its nearest cluster
 def assign_points_to_cluster(dataset, k_centers):
     assignments = []
     sum_squared_error = 0
+
     for point in dataset:
         shortest_distance = float("inf")
         shortest_center = 0
@@ -126,8 +132,9 @@ def assign_points_to_cluster(dataset, k_centers):
             if dist < shortest_distance:
                 shortest_center = i
                 shortest_distance = dist
+
         assignments.append(shortest_center)
-        sum_squared_error += shortest_distance
+        sum_squared_error += shortest_distance**2
     return assignments, sum_squared_error
 
 
@@ -172,27 +179,24 @@ def run_kmeans(argv):
 
     # using different normalization methods
     # dataset = max_min_normalization(dataset)
-    dataset = z_score(dataset)
+    # dataset = z_score(dataset)
 
     initial_k_centers = random.sample(dataset, k)
-    print("initial_k_centers: ", initial_k_centers)
+    # print("initial_k_centers: ", initial_k_centers)
+    sum_squared_error = 0
+    silhouette_coefficient = 0
 
+    old_assignments = None
     assignments, sum_squared_error = assign_points_to_cluster(
         dataset, initial_k_centers)
     # print("assignments: ", assignments)
-
-    old_assignments = None
-
-    k_centers = initial_k_centers
-    sum_squared_error = 0
-    silhouette_coefficient = 0
 
     while assignments != old_assignments:
         new_centers = update_centers(dataset, assignments)
         old_assignments = assignments
         assignments, sum_squared_error = assign_points_to_cluster(
-            dataset, k_centers)
-        print("assignments: ", assignments)
+            dataset, new_centers)
+    # print("assignments: ", assignments)
 
     end = time.time()
     silhouette_coefficient = cal_silhouette_coefficient(dataset, assignments)
@@ -200,6 +204,16 @@ def run_kmeans(argv):
                          silhouette_coefficient, output_file)
 
     print("running time: ", end - start)
+
+    # compare with sklearn
+    sklearn_kmeans = KMeans(n_clusters=k).fit(dataset)
+    labels = sklearn_kmeans.labels_
+    print(labels)
+    my_silhouette_coefficient = cal_silhouette_coefficient(dataset, labels)
+    print("my silhouette_coefficient: ", my_silhouette_coefficient)
+
+    print(sklearn_kmeans.inertia_, silhouette_score(
+        dataset, labels, metric='euclidean'))
 
 
 if __name__ == "__main__":
