@@ -1,7 +1,7 @@
 '''
 @Author: Hejie Cui
 @Date: 2020-02-24 14:40:35
-@LastEditTime: 2020-02-26 22:46:15
+@LastEditTime: 2020-02-27 14:32:17
 @FilePath: /CS570-DataMining/hw3/hw3.py
 '''
 from sklearn.cluster import KMeans
@@ -31,6 +31,10 @@ def parse_dataset(input_dasaset):
             line = line.strip("\n")
             numerical_attributes = []
             all_attributes = line.split(",")
+            # based on the assumption given on piazza, the last column of our test dataset is always class labels,
+            # simply remove the label to get all attributes
+            all_attributes = all_attributes[:-1]
+            # filter out only the numerical attributes
             numerical_attributes = filter(is_numerical, all_attributes)
             numerical_attributes = [float(f) for f in numerical_attributes]
             if numerical_attributes != []:
@@ -101,7 +105,10 @@ def cal_silhouette_coefficient(dataset, assignments):
                     inter_dist_avg = inter_dist_sum / num_points_in_another_center_cluster
                     inter_dist_list.append(inter_dist_avg)
 
-            b_o = min(inter_dist_list)
+            if inter_dist_list != []:
+                b_o = min(inter_dist_list)
+            else:
+                b_o = float("inf")
 
             s_o = (b_o - a_o) / max(a_o, b_o)
             s_o_list.append(s_o)
