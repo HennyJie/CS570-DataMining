@@ -1,10 +1,28 @@
+'''
+@Author: Hejie Cui
+@Date: 2020-04-05 14:02:21
+@LastEditTime: 2020-04-08 17:17:24
+@Description: hw4 for CS570 DataMining
+@FilePath: /CS570-DataMining/hw4/pagerank.py
+'''
 import sys
 import numpy as np
-from collections import defaultdict
 
 
-# the main logic of pagerank algorithm, reference: wikipedia
-def page_rank(M, d=0.85, max_error=1e-5, max_iter=100):
+def page_rank(M, d=0.85, max_error=1e-5, max_iter=100) -> np.ndarray:
+    """[the main logic of pagerank algorithm, reference: wikipedia]
+
+    Arguments:
+        M {[type]} -- [the iteration metrix]
+
+    Keyword Arguments:
+        d {float} -- [probability with which teleports will occur] (default: {0.85})
+        max_error {[type]} -- [total error in ranks should be less than epsilon] (default: {1e-5})
+        max_iter {int} -- [maximum number of times to apply power iteration] (default: {100})
+
+    Returns:
+        np.ndarray -- [description]
+    """
     n = M.shape[1]
     v = np.random.rand(n, 1)
     v = v / np.linalg.norm(v, 1)
@@ -17,8 +35,15 @@ def page_rank(M, d=0.85, max_error=1e-5, max_iter=100):
     return v
 
 
-# generate the metrix for pagerank iteration
-def generate_metrix(edges):
+def generate_metrix(edges: list) -> np.ndarray:
+    """[generate the metrix for pagerank iteration]
+
+    Arguments:
+        edges {list} -- [the edges contained in the graph]
+
+    Returns:
+        np.ndarray -- [the iteration metrix]
+    """
     all_nodes = []
     for edge in edges:
         all_nodes.append(edge[0])
@@ -34,8 +59,12 @@ def generate_metrix(edges):
     return M
 
 
-# main function
-def run_pagerank(argv):
+def run_pagerank(argv: list):
+    """[main function]
+
+    Arguments:
+        argv {list} -- [the input argv list]
+    """
     input_graph = argv[0]
     output_file = argv[1]
     edges = []
