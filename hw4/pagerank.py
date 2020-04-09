@@ -1,24 +1,24 @@
 '''
 @Author: Hejie Cui
 @Date: 2020-04-05 14:02:21
-@LastEditTime: 2020-04-08 17:17:24
-@Description: hw4 for CS570 DataMining
+@LastEditTime: 2020-04-08 23:13:43
+@Description: PageRank Algorithm, hw4 for CS570 DataMining
 @FilePath: /CS570-DataMining/hw4/pagerank.py
 '''
 import sys
 import numpy as np
 
 
-def page_rank(M, d=0.85, max_error=1e-5, max_iter=100) -> np.ndarray:
-    """[the main logic of pagerank algorithm, reference: wikipedia]
+def page_rank(M: np.ndarray, d: float = 0.85, max_error: float = 1e-5, max_iter: int = 100) -> np.ndarray:
+    """the main logic of pagerank algorithm, reference: wikipedia
 
     Arguments:
-        M {[type]} -- [the iteration metrix]
+        M {np.ndarray} -- the iteration metrix
 
     Keyword Arguments:
-        d {float} -- [probability with which teleports will occur] (default: {0.85})
-        max_error {[type]} -- [total error in ranks should be less than epsilon] (default: {1e-5})
-        max_iter {int} -- [maximum number of times to apply power iteration] (default: {100})
+        d {float} -- probability with which teleports will occur (default: {0.85})
+        max_error {float} -- the maximum difference in ranks score after each iteration (default: {1e-5})
+        max_iter {int} -- maximum number of times to apply power iteration (default: {100})
 
     Returns:
         np.ndarray -- [description]
@@ -36,13 +36,13 @@ def page_rank(M, d=0.85, max_error=1e-5, max_iter=100) -> np.ndarray:
 
 
 def generate_metrix(edges: list) -> np.ndarray:
-    """[generate the metrix for pagerank iteration]
+    """generate the metrix for pagerank iteration
 
     Arguments:
-        edges {list} -- [the edges contained in the graph]
+        edges {list} -- the edges contained in the graph
 
     Returns:
-        np.ndarray -- [the iteration metrix]
+        np.ndarray -- the iteration metrix
     """
     all_nodes = []
     for edge in edges:
@@ -60,10 +60,10 @@ def generate_metrix(edges: list) -> np.ndarray:
 
 
 def run_pagerank(argv: list):
-    """[main function]
+    """main function
 
     Arguments:
-        argv {list} -- [the input argv list]
+        argv {list} -- the input argv list
     """
     input_graph = argv[0]
     output_file = argv[1]
