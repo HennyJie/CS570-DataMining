@@ -1,15 +1,17 @@
 '''
 @Author: Hejie Cui
 @Date: 2020-04-05 14:02:21
-@LastEditTime: 2020-04-08 23:43:12
+@LastEditTime: 2020-04-09 19:15:34
 @Description: PageRank Algorithm, hw4 for CS570 DataMining
 @FilePath: /CS570-DataMining/hw4/pagerank.py
 '''
 import sys
 import numpy as np
+import re
+from collections import defaultdict
 
 
-def page_rank(M: np.ndarray, d: float = 0.85, max_error: float = 1e-5, max_iter: int = 100) -> np.ndarray:
+def page_rank(M: np.ndarray, d: float = 0.85, max_error: float = 1e-5) -> np.ndarray:
     """the main logic of pagerank algorithm, reference: wikipedia
 
     Arguments:
@@ -18,24 +20,24 @@ def page_rank(M: np.ndarray, d: float = 0.85, max_error: float = 1e-5, max_iter:
     Keyword Arguments:
         d {float} -- probability with which teleports will occur (default: {0.85})
         max_error {float} -- the maximum difference in ranks score after each iteration (default: {1e-5})
-        max_iter {int} -- maximum number of times to apply power iteration (default: {100})
 
     Returns:
         np.ndarray -- [description]
     """
     n = M.shape[1]
-    v = np.random.rand(n, 1)
+    v = np.ones((n, 1))/n
     v = v / np.linalg.norm(v, 1)
     M_hat = (d * M + (1 - d) / n)
-    for i in range(max_iter):
+    flag = False
+    while not flag:
         current_v = v
         v = np.dot(M_hat, v)
         if np.sum(np.abs(current_v - v)) < max_error:
-            break
+            flag = True
     return v
 
 
-def generate_metrix(edges: list) -> np.ndarray:
+def generate_metrix(all_nodes: np.ndarray, edges: list) -> np.ndarray:
     """generate the metrix for pagerank iteration
 
     Arguments:
@@ -44,16 +46,14 @@ def generate_metrix(edges: list) -> np.ndarray:
     Returns:
         np.ndarray -- the iteration metrix
     """
-    all_nodes = []
-    for edge in edges:
-        all_nodes.append(edge[0])
-        all_nodes.append(edge[1])
-    all_nodes = np.unique(all_nodes)
+
     node_num = len(all_nodes)
 
     M = np.zeros((node_num, node_num))
     for edge in edges:
-        M[edge[1], edge[0]] = 1
+        end = all_nodes.tolist().index(edge[1])
+        start = all_nodes.tolist().index(edge[0])
+        M[end, start] = 1
     divide = np.sum(M, axis=0)
     divide[divide == 0] = 1
     M = M / divide
@@ -72,25 +72,35 @@ def run_pagerank(argv: list):
     with open(input_graph, 'r') as file:
         lines = file.readlines()[1:-1]
     for line in lines:
-        start, end = line.split(' -> ')
-        start = start.strip()
-        end = end.strip()
-        # here I use num as the name of vertex
-        edges.append([int(start), int(end)])
+        edge = re.findall(r'\s*(\S+)*\s*->\s*(\S+)*', line)
+        if edge:
+            edge = [i for i in edge[0]]
+            edges.append(edge)
 
-    M = generate_metrix(edges)
-    rank_score = page_rank(M, 0.85, 1e-5, 100)
+    all_nodes = []
+    for edge in edges:
+        all_nodes.append(edge[0])
+        all_nodes.append(edge[1])
+    all_nodes = np.unique(all_nodes)
+
+    M = generate_metrix(all_nodes, edges)
+    rank_score = page_rank(M, 0.85, 1e-5)
     rank_score_list = []
 
-    # sort the page by descending (highest to lowest) value of pagerank
+    # sort the page by descending (highest to lowest) value of pagerank, In case of ties in PageRank value,
+    # lines are then sorted by ascending (lowest to highest) vertex name
     for score in rank_score:
         rank_score_list.append(score[0])
-    rank = np.argsort(rank_score_list)[::-1]
+    rank_score_dict = defaultdict(float)
+    for i, score in enumerate(rank_score_list):
+        rank_score_dict[i] = rank_score_list[i]
+    rank = sorted(rank_score_dict, key=lambda k: (-rank_score_dict[k], k))
 
     with open(output_file, 'w') as output_file:
         output_file.write('vertex,pagerank\n')
         for i in rank:
-            output_file.write('{},{}\n'.format(i, rank_score_list[i]))
+            output_file.write('{},{}\n'.format(
+                all_nodes[i], rank_score_list[i]))
 
 
 if __name__ == '__main__':

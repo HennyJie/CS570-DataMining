@@ -10,7 +10,8 @@
       "request": "launch",
       "program": "${file}",
       "console": "integratedTerminal",
-      "args": ["hw4/dot_file/graph1.dot", "hw4/dot_file/hits1.csv"]
+      // "args": ["hw4/dot_file/graph5.dot", "hw4/dot_file/hits5.csv"]
+      "args": ["hw4/dot_file/graph1.dot", "hw4/dot_file/test1.csv"]
     }
   ]
 }
