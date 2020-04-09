@@ -1,7 +1,7 @@
 '''
 @Author: Hejie Cui
 @Date: 2020-04-08 14:44:56
-@LastEditTime: 2020-04-08 23:14:52
+@LastEditTime: 2020-04-08 23:41:08
 @Description: HITS Algorithm, hw4 for CS570 DataMining
 @FilePath: /CS570-DataMining/hw4/hits.py
 '''
@@ -11,11 +11,11 @@ import numpy as np
 
 
 class Page:
-    def __init__(self, id: int, edges: list):
+    def __init__(self, id: str, edges: list):
         """page init
 
         Arguments:
-            id {int} -- id/name of each page
+            id {str} -- id/name of each page
             edges {list} -- all the edges contained in the graph
         """
         self.id = id
@@ -24,7 +24,7 @@ class Page:
         self.incoming_neighbors = [edge[0] for edge in edges if edge[1] == id]
         self.outcoming_neighbors = [edge[1] for edge in edges if edge[0] == id]
 
-    def __gt__(self, other: Page) -> bool:
+    def __gt__(self, other) -> bool:
         """custom compare function
 
         Arguments:
@@ -97,16 +97,18 @@ def run_hits(argv: list):
         start = start.strip()
         end = end.strip()
         # here I use num as the name of vertex
-        edges.append([int(start), int(end)])
+        edges.append([start, end])
 
     all_nodes = []
     for edge in edges:
         all_nodes.append(edge[0])
         all_nodes.append(edge[1])
-    node_num = len(np.unique(all_nodes))
+    all_nodes = np.unique(all_nodes)
+
+    # node_num = len(all_nodes)
 
     pages = []
-    for node in range(node_num):
+    for node in all_nodes:
         pages.append(Page(node, edges))
     hits(pages)
 

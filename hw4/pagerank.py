@@ -1,7 +1,7 @@
 '''
 @Author: Hejie Cui
 @Date: 2020-04-05 14:02:21
-@LastEditTime: 2020-04-08 23:13:43
+@LastEditTime: 2020-04-08 23:43:12
 @Description: PageRank Algorithm, hw4 for CS570 DataMining
 @FilePath: /CS570-DataMining/hw4/pagerank.py
 '''
@@ -48,7 +48,8 @@ def generate_metrix(edges: list) -> np.ndarray:
     for edge in edges:
         all_nodes.append(edge[0])
         all_nodes.append(edge[1])
-    node_num = len(np.unique(all_nodes))
+    all_nodes = np.unique(all_nodes)
+    node_num = len(all_nodes)
 
     M = np.zeros((node_num, node_num))
     for edge in edges:
